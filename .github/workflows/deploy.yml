@@ -1,4 +1,4 @@
-name: Deploy AWS Landing Zone
+name: Deploy and Destroy AWS Landing Zone
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   terraform:
-    name: Deploy AWS Landing Zone
+    name: Deploy and Destroy AWS Landing Zone
     runs-on: ubuntu-latest
 
     steps:
@@ -38,3 +38,8 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
+
+      # Optional: Destroy resources after deployment (can be triggered by a manual event)
+      - name: Terraform Destroy (optional)
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} # Optional condition
+        run: terraform destroy -auto-approve
