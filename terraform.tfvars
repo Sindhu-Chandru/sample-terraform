@@ -1,0 +1,7 @@
+aws_region              = "us-east-1"
+aws_profile             = "default"
+parent_id               = "r-1234"
+terraform_bucket_name   = "my-terraform-state-bucket"
+terraform_bucket_key    = "landing-zone/terraform.tfstate"
+terraform_bucket_region = "us-east-1"
+terraform_lock_table    = "terraform-state-locks"
