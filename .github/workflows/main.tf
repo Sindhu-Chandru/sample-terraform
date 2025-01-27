@@ -1,55 +1,86 @@
-provider "aws" {
-  region = var.aws_region
-}
-
-module "aws_control_tower" {
-  source = "terraform-aws-modules/control-tower/aws"
-
-  aws_region        = var.aws_region
-  parent_id         = var.parent_id
-  control_tower_name = var.control_tower_name
-}
-
-resource "aws_organizations_organizational_unit" "security" {
-  name      = "Security"
-  parent_id = var.parent_id
-}
-
-resource "aws_organizations_organizational_unit" "audit" {
-  name      = "Audit"
-  parent_id = var.parent_id
-}
-
-resource "aws_s3_bucket" "log_bucket" {
+# Create S3 Bucket for Terraform State
+resource "aws_s3_bucket" "terraform_state" {
   bucket = var.terraform_bucket_name
+
   acl    = "private"
 
   versioning {
     enabled = true
   }
 
-  logging {
-    target_bucket = var.terraform_bucket_name
-    target_prefix = "log/"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  tags = {
+    Environment = "Production"
+    Purpose     = "Terraform State Storage"
+  }
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
-output "control_tower_id" {
-  description = "The Control Tower ID"
-  value       = module.aws_control_tower.control_tower_id
+# Create DynamoDB Table for State Locking
+resource "aws_dynamodb_table" "terraform_locks" {
+  name         = var.terraform_lock_table
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  hash_key = "LockID"
+
+  tags = {
+    Environment = "Production"
+    Purpose     = "Terraform State Locking"
+  }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
-output "security_ou_id" {
-  description = "The ID of the Security OU"
-  value       = aws_organizations_organizational_unit.security.id
+# Create the AWS Organization
+resource "aws_organizations_organization" "this" {
+  aws_service_access_principals = [
+    "cloudtrail.amazonaws.com",
+    "config.amazonaws.com",
+    "sso.amazonaws.com",
+    "controltower.amazonaws.com",
+  ]
+
+  feature_set = "ALL"
+
+  enabled_policy_types = [
+    "SERVICE_CONTROL_POLICY",
+    "TAG_POLICY"
+  ]
 }
 
-output "audit_ou_id" {
-  description = "The ID of the Audit OU"
-  value       = aws_organizations_organizational_unit.audit.id
+# Create the Security Organizational Unit
+resource "aws_organizations_organizational_unit" "security" {
+  name      = "Security"
+  parent_id = aws_organizations_organization.this.roots[0].id
+
+  tags = {
+    Environment = "Production"
+    Purpose     = "Security"
+  }
 }
 
-output "log_bucket_name" {
-  description = "The S3 Bucket for logging"
-  value       = aws_s3_bucket.log_bucket.bucket
+# Create the Audit Log Organizational Unit
+resource "aws_organizations_organizational_unit" "audit_log" {
+  name      = "Audit Log"
+  parent_id = aws_organizations_organization.this.roots[0].id
+
+  tags = {
+    Environment = "Production"
+    Purpose     = "Audit"
+  }
 }

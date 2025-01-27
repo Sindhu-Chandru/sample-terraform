@@ -1,40 +1,52 @@
-name: Deploy AWS Landing Zone
+name: Create AWS Infrastructure
 
 on:
+  workflow_dispatch: # Allows you to manually trigger the workflow
   push:
     branches:
       - main
 
-env:
-  TF_LOG: INFO
-  TF_INPUT: false
-
 jobs:
   terraform:
-    name: Deploy AWS Landing Zone
+    name: Terraform Deploy
     runs-on: ubuntu-latest
 
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      # Step 1: Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.6
-
+      # Step 2: Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: "us-east-1" # Default region (if needed)
 
+      # Step 3: Install Terraform
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6 # Adjust version as needed
+
+      # Step 4: Terraform Init
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
+      # Step 5: Terraform Validate
+      - name: Terraform Validate
+        run: terraform validate
 
+      # Step 6: Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.tfvars" -out=tfplan
+
+      # Step 7: Terraform Apply
       - name: Terraform Apply
+        if: github.event_name == 'push'
         run: terraform apply -auto-approve tfplan
