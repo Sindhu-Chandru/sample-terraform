@@ -1,3 +1,8 @@
+# Provider Configuration
+provider "aws" {
+  region = var.aws_region
+}
+
 # AWS Organizations
 resource "aws_organizations_organization" "this" {
   aws_service_access_principals = [
@@ -68,4 +73,25 @@ resource "aws_dynamodb_table" "terraform_locks" {
   }
 
   tags = var.environment_tags
+}
+
+# Outputs
+output "organization_id" {
+  value = aws_organizations_organization.this.id
+}
+
+output "security_ou_id" {
+  value = aws_organizations_organizational_unit.security.id
+}
+
+output "audit_log_ou_id" {
+  value = aws_organizations_organizational_unit.audit_log.id
+}
+
+output "s3_bucket_name" {
+  value = aws_s3_bucket.terraform_state.id
+}
+
+output "dynamodb_table_name" {
+  value = aws_dynamodb_table.terraform_locks.name
 }

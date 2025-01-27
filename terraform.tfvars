@@ -1,7 +1,9 @@
-aws_region              = "us-east-1"
-aws_profile             = "default"
-parent_id               = "r-1234"
-terraform_bucket_name   = "my-terraform-state-bucket"
-terraform_bucket_key    = "landing-zone/terraform.tfstate"
-terraform_bucket_region = "us-east-1"
-terraform_lock_table    = "terraform-state-locks"
+aws_region            = "us-east-1"
+parent_id             = "r-1p5x"
+terraform_bucket_name = "example-terraform-state"
+terraform_lock_table  = "example-terraform-locks"
+
+environment_tags = {
+  Environment = "Production"
+  Owner       = "DevOps"
+}

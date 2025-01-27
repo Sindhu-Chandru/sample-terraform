@@ -8,14 +8,13 @@ terraform {
 
   backend "s3" {
     bucket         = var.terraform_bucket_name
-    key            = var.terraform_bucket_key
-    region         = var.terraform_bucket_region
+    key            = "terraform/state.tfstate"
+    region         = var.aws_region
     dynamodb_table = var.terraform_lock_table
     encrypt        = true
   }
 }
 
 provider "aws" {
-  region  = var.aws_region
-  profile = var.aws_profile
+  region = var.aws_region
 }
