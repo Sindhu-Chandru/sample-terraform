@@ -3,7 +3,7 @@ output "organization_name" {
   value       = var.organization_name
 }
 
-output "user_emails" {
+output "user_email" {
   description = "The email IDs for each Organizational Unit"
   value       = var.users_email
 }
