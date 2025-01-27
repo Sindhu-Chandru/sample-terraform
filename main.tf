@@ -1,3 +1,10 @@
+# Provider Configuration
+provider "aws" {
+  region  = var.aws_region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+}
+
 # Create S3 Bucket for Terraform State
 resource "aws_s3_bucket" "terraform_state" {
   bucket = var.terraform_bucket_name
@@ -20,6 +27,7 @@ resource "aws_s3_bucket" "terraform_state" {
     Environment = "Production"
     Purpose     = "Terraform State Storage"
   }
+
   lifecycle {
     prevent_destroy = true
   }
@@ -41,6 +49,7 @@ resource "aws_dynamodb_table" "terraform_locks" {
     Environment = "Production"
     Purpose     = "Terraform State Locking"
   }
+
   lifecycle {
     prevent_destroy = true
   }
