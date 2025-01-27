@@ -1,4 +1,4 @@
-name: Deploy AWS Control Tower
+name: Deploy AWS Landing Zone
 
 on:
   push:
@@ -11,36 +11,30 @@ env:
 
 jobs:
   terraform:
-    name: Deploy AWS Control Tower and Resources
+    name: Deploy AWS Landing Zone
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.6
 
-      # Step 3: Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}  # Reference secret for AWS region
+          aws-region: us-east-1
 
-      # Step 4: Terraform Init
       - name: Terraform Init
         run: terraform init
 
-      # Step 5: Terraform Plan
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      # Step 6: Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
