@@ -4,7 +4,7 @@
 variable "aws_region" {
   description = "The AWS region where resources will be provisioned."
   type        = string
-  default     = "us-east-1"  # Adjust the default region as needed
+  default     = "us-east-1"
 }
 
 # Parent ID for the Organizational Units (OU)
@@ -25,7 +25,7 @@ variable "terraform_lock_table" {
   type        = string
 }
 
-# Tags for Resources (environment, etc.)
+# Tags for Resources
 variable "environment_tags" {
   description = "A map of tags to apply to resources."
   type        = map(string)
@@ -34,11 +34,3 @@ variable "environment_tags" {
     "Owner"       = "Terraform"
   }
 }
-
-# Additional Tags for Resources
-variable "additional_tags" {
-  description = "Additional tags to apply to resources."
-  type        = map(string)
-  default     = {}
-}
-
