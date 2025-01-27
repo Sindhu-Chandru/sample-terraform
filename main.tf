@@ -1,8 +1,12 @@
+provider "aws" {
+  region = "us-west-2"  # Change to your desired region
+}
+
 resource "aws_organizations_organizational_unit" "dev" {
   name      = "Dev"
   parent_id = var.parent_id
   tags = {
-    Organization = var.org_name
+    Organization = var.organization_name
   }
 }
 
@@ -10,7 +14,7 @@ resource "aws_organizations_organizational_unit" "prod" {
   name      = "Prod"
   parent_id = var.parent_id
   tags = {
-    Organization = var.org_name
+    Organization = var.organization_name
   }
 }
 
@@ -18,7 +22,7 @@ resource "aws_organizations_organizational_unit" "security" {
   name      = "Security"
   parent_id = var.parent_id
   tags = {
-    Organization = var.org_name
+    Organization = var.organization_name
   }
 }
 
@@ -26,19 +30,18 @@ resource "aws_organizations_organizational_unit" "audit" {
   name      = "Audit"
   parent_id = var.parent_id
   tags = {
-    Organization = var.org_name
+    Organization = var.organization_name
   }
 }
 
-# Create IAM users from email list
 resource "aws_iam_user" "users" {
-  for_each = toset(var.users_email)
+  for_each = var.users_email
 
-  name = each.value  # Use email as username (or you could split it to just use the username portion)
+  name = each.value  # Use email as username
 
   tags = {
     Email        = each.value
-    Organization = var.org_name  # Tag with Organization name
+    Organization = var.organization_name  # Tag with Organization name
   }
 }
 
