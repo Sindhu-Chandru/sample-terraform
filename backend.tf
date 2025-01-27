@@ -1,11 +1,9 @@
-# backend.tf (static values, no variables)
-
 terraform {
   backend "s3" {
-    bucket         = "your-terraform-state-bucket"  # Replace with your bucket name
-    region         = "us-east-1"  # Replace with your region
-    key            = "terraform/state.tfstate"
-    dynamodb_table = "your-dynamodb-lock-table"  # Replace with your DynamoDB table name
+    bucket         = "genworx-bucket"  # Your existing S3 bucket for Terraform state
+    key            = "terraform/state/landing-zone.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock-table"  # Your existing DynamoDB table for locking
     encrypt        = true
   }
 }

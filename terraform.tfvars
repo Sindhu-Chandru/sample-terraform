@@ -1,4 +1,8 @@
-# terraform.tfvars
-aws_region            = "us-east-1"
-terraform_bucket_name = "example-terraform-state"
-terraform_lock_table  = "example-terraform-locks"
+organization_name = "Genworx Organization"
+parent_id         = "r-1p5x"  # Replace with your actual root ID
+user_emails = {
+  "dev"      = "dev_user@example.com"
+  "prod"     = "prod_user@example.com"
+  "security" = "security_user@example.com"
+  "audit"    = "audit_user@example.com"
+}
