@@ -1,6 +1,3 @@
 provider "aws" {
-  region = "us-east-1"  # You can keep region as a variable or hard-code it here.
+  region = var.aws_region  # This is picked from the terraform.tfvars file or other sources
 }
-
-# You do not need the backend block here
-# Terraform will use the S3 and DynamoDB resources for state after they are created
