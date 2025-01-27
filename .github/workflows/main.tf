@@ -75,6 +75,59 @@ resource "aws_dynamodb_table" "terraform_locks" {
   tags = var.environment_tags
 }
 
+# IAM Role for Terraform State Access
+resource "aws_iam_role" "terraform_state_role" {
+  name = "terraform-state-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = var.environment_tags
+}
+
+# IAM Policy for Terraform S3 and DynamoDB Access
+resource "aws_iam_policy" "terraform_policy" {
+  name        = "terraform-policy"
+  description = "Policy for Terraform to access S3 and DynamoDB for state management"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+        Effect   = "Allow"
+        Resource = [
+          "${aws_s3_bucket.terraform_state.arn}/*",
+          aws_s3_bucket.terraform_state.arn
+        ]
+      },
+      {
+        Action   = ["dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Scan"]
+        Effect   = "Allow"
+        Resource = aws_dynamodb_table.terraform_locks.arn
+      }
+    ]
+  })
+
+  tags = var.environment_tags
+}
+
+# Attach the policy to the IAM role
+resource "aws_iam_role_policy_attachment" "terraform_role_attachment" {
+  role       = aws_iam_role.terraform_state_role.name
+  policy_arn = aws_iam_policy.terraform_policy.arn
+}
+
 # Outputs
 output "organization_id" {
   value = aws_organizations_organization.this.id
@@ -94,4 +147,20 @@ output "s3_bucket_name" {
 
 output "dynamodb_table_name" {
   value = aws_dynamodb_table.terraform_locks.name
+}
+
+output "s3_bucket_arn" {
+  value = aws_s3_bucket.terraform_state.arn
+}
+
+output "dynamodb_table_arn" {
+  value = aws_dynamodb_table.terraform_locks.arn
+}
+
+output "terraform_role_arn" {
+  value = aws_iam_role.terraform_state_role.arn
+}
+
+output "terraform_policy_arn" {
+  value = aws_iam_policy.terraform_policy.arn
 }
