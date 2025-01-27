@@ -1,56 +1,40 @@
-name: Terraform AWS Landing Zone Deployment
+name: Deploy AWS Landing Zone
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:  # This allows manual triggering of the workflow
+
+env:
+  TF_LOG: INFO
+  TF_INPUT: false
 
 jobs:
   terraform:
+    name: Deploy AWS Landing Zone
     runs-on: ubuntu-latest
-    environment: production
 
     steps:
-      # Step 1: Checkout code from the repository
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # Step 2: Set up Terraform
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.0  # Specify the version of Terraform you are using
+          terraform_version: 1.5.6
 
-      # Step 3: Configure AWS credentials for Terraform
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}       # Store AWS credentials in GitHub Secrets
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1                                        # Replace with the region you're using
+          aws-region: us-east-1
 
-      # Step 4: Initialize Terraform (initializes backend, downloads providers)
       - name: Terraform Init
         run: terraform init
 
-      # Step 5: Terraform Plan to see the changes before applying
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
 
-      # Step 6: Apply Terraform configuration (creates resources in AWS)
       - name: Terraform Apply
-        run: terraform apply -auto-approve
-
-      # Step 7: Output the created resources (to track resources created in AWS)
-      - name: Output created resources
-        run: |
-          # Ensuring that keys are unique
-          terraform output -json | jq 'to_entries | map({key: .key, value: .value.value}) | from_entries' > terraform_outputs.json
-          
-          # Here the .key will be the variable and .value.value will be the output from terraform
-          echo "Terraform outputs: "
-          cat terraform_outputs.json
+        run: terraform apply -auto-approve tfplan
