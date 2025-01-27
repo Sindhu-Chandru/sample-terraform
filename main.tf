@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "us-west-2"  # Change to your desired region
-}
-
 resource "aws_organizations_organizational_unit" "dev" {
   name      = "Dev"
   parent_id = var.parent_id
