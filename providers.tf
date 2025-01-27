@@ -1,13 +1,6 @@
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"  # You can keep region as a variable or hard-code it here.
 }
 
-terraform {
-  backend "s3" {
-    bucket         = aws_s3_bucket.terraform_state.bucket
-    key            = "terraform/state/organizations.tfstate"
-    region         = var.aws_region
-    dynamodb_table = aws_dynamodb_table.terraform_locks.name
-    encrypt        = true
-  }
-}
+# You do not need the backend block here
+# Terraform will use the S3 and DynamoDB resources for state after they are created

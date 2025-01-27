@@ -1,7 +1,7 @@
 name: Create AWS Infrastructure
 
 on:
-  workflow_dispatch: # Allows you to manually trigger the workflow
+  workflow_dispatch:  # Allows you to manually trigger the workflow
   push:
     branches:
       - main
@@ -14,6 +14,7 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: "us-east-1"  # You can also pass the region via a variable or hard-code it here.
 
     steps:
       # Step 1: Checkout Code
@@ -26,15 +27,15 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: "us-east-1" # Default region (if needed)
+          aws-region: ${{ env.AWS_REGION }}
 
       # Step 3: Install Terraform
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.6 # Adjust version as needed
+          terraform_version: 1.5.6  # Adjust version as needed
 
-      # Step 4: Terraform Init
+      # Step 4: Terraform Init (Create S3 bucket and DynamoDB Table first)
       - name: Terraform Init
         run: terraform init
 
@@ -42,11 +43,24 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      # Step 6: Terraform Plan
+      # Step 6: Terraform Plan (For initial infrastructure creation)
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -out=tfplan
+        run: terraform plan -out=tfplan
 
-      # Step 7: Terraform Apply
+      # Step 7: Apply Terraform Plan (Create infrastructure, including S3 and DynamoDB)
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: terraform apply -auto-approve tfplan
+
+      # Step 8: Terraform Init Again (to configure backend after resources are created)
+      - name: Terraform Init for Backend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_BUCKET_NAME }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
+            -backend-config="region=${{ secrets.AWS_REGION }}"
+
+      # Step 9: Final Terraform Apply (Now with backend configured)
+      - name: Terraform Apply (Full Infrastructure)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: terraform apply -auto-approve
